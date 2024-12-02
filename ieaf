@@ -1,0 +1,371 @@
+#!/usr/bin/python3
+
+import os
+import sys
+import time
+import argparse
+import sqlite3
+from selenium import webdriver                  # 需要安装第三方库selenium
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service as ChromeService
+
+"""
+一个自动化脚本，用于爬取IEEExplore网站上期刊的early access条目
+
+前置条件：
+0. 本脚本强依赖Linux桌面环境（作者懒得移植到Windows平台）；Windows用户可以在WSLg环境下运行，Linux命令行终端用户请配置X server
+1. 安装第三方python库selenium
+2. 安装chrome/chromium浏览器（如果你在墙内，为了避免不必要的麻烦，请手动下载同一版本的chrome浏览器和chromedriver，参考第3条），并确保chrome/chromium可以通过PATH环境变量访问到；
+3. 墙内用户需要做的事情，墙外用户可以跳过本条：
+    1. 下载并解压同一版本的chrome和chromedriver：https://googlechromelabs.github.io/chrome-for-testing/
+    2. 修改下述代码，配置正确的chromedriver可执行文件（注意是可执行文件）的路径
+    3. 修改下述代码，将chrome可执行文件所在的目录（注意是目录）加入PATH环境变量；chromedriver会通过PATH环境变量找到并运行chrome
+4. （可选）修改下述代码，设置正确的sqlite3数据库文件的路径（默认是本脚本所在目录下的ieaf.db）
+5. 运行`./ieaf -ni`初始化数据库（初始化的另一重含义是“擦除数据库中的已有数据”；该命令仅用于初始化，不要用于删库跑路）
+
+爬虫原理：
+使用selenium库，通过chromedriver控制chrome加载和渲染网页（当然也可以更换为selenium支持的其他浏览器，详见https://www.selenium.dev/documentation/webdriver/browsers/），
+然后从最终呈现的HTML中提取所需的数据。
+
+之所以使用上述技术路线而非普通的爬虫库，是因为所需的数据是JS动态加载的，而IEEExplore网站存在较多的反爬虫措施，本脚本的作者也不愿意花太多精力去应对这些反爬虫措施，于是选择大力出奇迹；
+于是缺点是，本脚本只能在GUI系统中运行（创建的chrome进程必须是GUI进程，headless模式抓不到数据），且每抓一个网页要耗费十几至几十秒，以及运行一个完整的浏览器内核所付出的几百MB内存；
+上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了15本期刊）；
+不过，（在经费充足的条件下）计算机可以无限堆算力，但是人的时间精力就这么多，数据抓得再多，你看得完么？
+"""
+
+# 墙内用户请配置chromedriver可执行文件路径，墙外用户注释掉下面这一行代码即可
+__chromedriver_executable_path = os.path.join(sys.path[0], "131.0.6778.85/chromedriver-linux64/chromedriver")
+
+# 墙内用户请配置chrome目录所在的PATH环境变量，墙外用户只需要确保chrome/chromium可以通过PATH环境变量访问到
+os.environ["PATH"] = os.path.join(sys.path[0], "131.0.6778.85/chrome-linux64") + ":" + os.environ["PATH"]
+
+# （可选）配置数据库文件的路径
+__database = os.path.join(sys.path[0], "ieaf.db")
+
+
+def __init_database()-> None:
+    
+    initscript = """
+    
+PRAGMA foreign_keys = off;
+BEGIN TRANSACTION;
+
+DROP TABLE IF EXISTS items;
+
+CREATE TABLE items (
+    document_id          INTEGER  NOT NULL ON CONFLICT FAIL
+                                  PRIMARY KEY ON CONFLICT FAIL
+                                  UNIQUE ON CONFLICT FAIL,
+    title                STRING   NOT NULL ON CONFLICT FAIL,
+    isnumber             INTEGER  REFERENCES serials (isnumber) 
+                                  NOT NULL,
+    indexed_datetime     DATETIME NOT NULL ON CONFLICT FAIL,
+    abstract             TEXT,
+    latest_read_datetime DATETIME
+);
+
+DROP TABLE IF EXISTS serials;
+
+CREATE TABLE serials (
+    isnumber               INTEGER  PRIMARY KEY ON CONFLICT FAIL
+                                    UNIQUE ON CONFLICT FAIL
+                                    NOT NULL ON CONFLICT FAIL,
+    title                  STRING   NOT NULL,
+    user_sorted_order      INTEGER,
+    latest_update_datetime DATETIME
+);
+
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 2);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 1);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 1);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 1);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 3);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 3);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5534602, 'IEEE Communications Letters', 5);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 1);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6065724, 'IEEE Wireless Communications Letters', 5);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 2);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593428, 'IEEE Network', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 4);
+
+COMMIT TRANSACTION;
+PRAGMA foreign_keys = on;
+
+    """
+
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.executescript(initscript)
+        conn.close()
+    except Exception as e:
+        print("__init_database() error:", e, file=sys.stderr)
+        sys.exit(1)
+        
+
+def __get_item_by_document_id(document_id: int)-> dict:
+
+    result = dict()
+
+    sql = """select document_id, title, isnumber, indexed_datetime, abstract, latest_read_datetime from items where document_id = {};""".format(document_id)
+
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.execute(sql)
+        for row in cur:
+            result["document_id"]           = row[0]
+            result["title"]                 = row[1]
+            result["isnumber"]              = row[2]
+            result["indexed_datetime"]      = row[3]
+            result["abstract"]              = row[4]
+            result["latest_read_datetime"]  = row[5]
+        conn.close()
+    except Exception as e:
+        print("__get_item_by_document_id() error:", e, file=sys.stderr)
+        sys.exit(1)
+
+    return result
+
+
+def __update_item(document_id: int, title: str, isnumber: int, indexed_datetime, abstract: str = "", latest_read_datetime = "")-> None:
+
+    sql = """update items set title = "{}", isnumber = {}, indexed_datetime = "{}", abstract = "{}", latest_read_datetime = "{}" where document_id = {};""".format(title, isnumber, indexed_datetime, abstract, latest_read_datetime, document_id)
+
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.execute(sql)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("__update_item() error:", e, file=sys.stderr)
+        sys.exit(1)
+
+
+def __insert_item(document_id: int, title: str, isnumber: int, abstract: str = "")-> None:
+
+    indexed_datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+    # if item already exists, do update command rather than insert 
+    item = __get_item_by_document_id(document_id)
+    if len(item) != 0:
+        __update_item(document_id, title, isnumber, indexed_datetime, abstract, item["latest_read_datetime"])
+        return
+
+    # if item not exist, do insert command
+    sql = """insert into items (document_id, title, isnumber, indexed_datetime, abstract, latest_read_datetime) VALUES 
+        ({}, "{}", {}, "{}", "{}", "{}", "{}");""".format(document_id, title, isnumber, indexed_datetime, abstract, "")
+    
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.execute("""begin transaction;""")
+        cur.execute(sql)
+        cur.execute("""update serials set latest_update_datetime = "{}" where isnumber = {};""".format(indexed_datetime, isnumber))
+        cur.execute("""end transaction;""")
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print("__insert_item() error:", e, file=sys.stderr)
+        sys.exit(1)
+    
+
+def __get_all_serials_isnumber()-> list:
+
+    result = list()
+
+    sql = """select isnumber, latest_update_datetime from serials order by user_sorted_order;"""
+    
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.execute(sql)
+        for row in cur:
+            result.append(row[0])
+        conn.close()
+    except Exception as e:
+        print("__get_all_serials_isnumber() error:", e, file=sys.stderr)
+        sys.exit(1)
+        
+    return result
+
+
+def __fetch_early_access_items(isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
+    
+    result = list()
+
+    try:
+        if "__chromedriver_executable_path" not in globals():
+            service = ChromeService()
+        else:
+            service = ChromeService(executable_path=__chromedriver_executable_path)
+
+        options = webdriver.ChromeOptions()
+        browser = webdriver.Chrome(service=service, options=options)
+
+        url = "https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber={}&sortType={}&rowsPerPage={}&pageNumber={}".format(isnumber, sortType, rowsPerPage, pageNumber)
+        browser.get(url)
+        time.sleep(10) # waiting for page loading completed
+
+        # extract items list
+        publicationIssueMainContent = browser.find_element(By.ID, "publicationIssueMainContent global-margin-px")
+        
+        # extract each of items 
+        for item in publicationIssueMainContent.find_elements(By.CLASS_NAME, "List-results-items"): 
+
+            temp_dict = dict()
+
+            # extract document_id
+            href = item.find_element(By.TAG_NAME, "a").get_attribute("href")
+            href = href.lstrip("https://ieeexplore.ieee.org/document/")
+            href = href.rstrip("/")
+            temp_dict["document_id"] = href
+
+            # extract title
+            temp_dict["title"] = item.find_element(By.TAG_NAME, "a").text
+
+            # TODO: extract abstract
+
+            result.append(temp_dict)
+
+        browser.quit()
+
+    except Exception as e:
+        print("__fetch_early_access_items() error:", e, file=sys.stderr)
+        sys.exit(1)
+
+    return result
+
+
+def update_early_access(isnumber: int = 0, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> None:
+
+    if isnumber != 0:
+        for item in __fetch_early_access_items(isnumber, sortType, rowsPerPage, pageNumber):
+            __insert_item(item["document_id"], item["title"], isnumber)
+    else:
+        for isnumber in __get_all_serials_isnumber():
+            for item in __fetch_early_access_items(isnumber):
+                if len(__get_item_by_document_id(item["document_id"])) == 0:
+                    __insert_item(item["document_id"], item["title"], isnumber)
+
+
+def get_all_unread_items()-> list:
+
+    result = list()
+
+    sql = """select items.title, serials.title, items.abstract, items.document_id from items inner join serials on items.isnumber = serials.isnumber where items.latest_read_datetime = "" order by serials.user_sorted_order;"""
+
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.execute(sql)
+        for row in cur:
+            temp_dict = dict()
+            temp_dict["title"] = row[0]
+            temp_dict["serials"] = row[1]
+            temp_dict["abstract"] = row[2]
+            temp_dict["document_id"] = row[3]
+            result.append(temp_dict)
+        conn.close()
+    except Exception as e:
+        print("get_all_unread_items() error:", e, file=sys.stderr)
+        sys.exit(1)
+
+    return result
+
+
+def set_read_flag(document_id_list: list = list())-> None:
+
+    latest_read_datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+    if len(document_id_list) == 0: # set latest_read_datetime on all unread documents
+        try:
+            conn = sqlite3.connect(__database)
+            cur = conn.cursor()
+            sql = """update items set latest_read_datetime = "{}" where latest_read_datetime = "";""".format(latest_read_datetime)
+            cur.execute(sql)
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("set_read_flag() error:", e, file=sys.stderr)
+            sys.exit(1)
+    else:
+        try:
+            conn = sqlite3.connect(__database)
+            cur = conn.cursor()
+            cur.execute("""begin transaction;""")
+            for document_id in document_id_list:
+                sql = """update items set latest_read_datetime = "{}" where document_id = {};""".format(latest_read_datetime, document_id)
+                cur.execute(sql)
+            cur.execute("""end transaction;""")
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print("set_read_flag() error:", e, file=sys.stderr)
+            sys.exit(1)
+
+
+def __parse_args()-> None:
+    parse = argparse.ArgumentParser(prog="ieaf", description="ieaf is an acronym of IEEExplore early access follower.", epilog="https://github.com/bufbrane/ieaf")
+    parse.add_argument("-i", "--initialize", action="store_true", help="initialize the database")
+    parse.add_argument("-n", "--no-update", action="store_true", dest="no_update", help="skip fetch newest early access items from IEEExplore")
+    parse.add_argument("-l", "--list", action="store_true", help="list all unread documents")
+    parse.add_argument("-r", "--read", action="store_true", help="set the read flag on unread documents")
+    return parse.parse_args()
+
+
+def __check_dependency()-> None:
+
+    # check chrome/chromium existence
+    if os.system("chrome --version > /dev/null 2>&1") != 0:
+        pass
+    elif os.system("chromium --version > /dev/null 2>&1") != 0:
+        pass
+    else:
+        print("Error: cound not find chrome/chromium.", file=sys.stderr)
+        sys.exit(1)
+
+    # check chromedriver (manual configuration) existence
+    if "__chromedriver_executable_path" in globals():
+        if os.system("{} --version > /dev/null".format(__chromedriver_executable_path)) != 0:
+            print("Error: cound not find chromedriver.", file=sys.stderr)
+            sys.exit(1)
+
+
+def main()-> None:
+
+    __check_dependency()
+
+    __args = __parse_args()
+
+    if __args.initialize:
+        if input("Do you want to initialize the database? (if database already exists, it will be ERASED!!!) y/N ") == "y":
+            __init_database()
+        else:
+            print("abort.")
+            sys.exit(1)
+
+    if not __args.no_update:
+        update_early_access()
+    
+    if __args.list:
+        __items = get_all_unread_items()
+        for __i in range(len(__items)):
+            __item = __items[__i]
+            print("({})".format(__i + 1), __item["title"], "|", __item["serials"])
+            print("https://ieeexplore.ieee.org/document/{}/  \n".format(__item["document_id"]))
+
+    if __args.read:
+        if input("Do you want to set the read flag on unread documents? y/N ") == "y":
+            set_read_flag()
+        else:
+            print("abort.")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
