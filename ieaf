@@ -91,18 +91,18 @@ CREATE TABLE serials (
     latest_update_datetime DATETIME
 );
 
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 2);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 1);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 2);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 1);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 1);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 3);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 2);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 3);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 2);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5534602, 'IEEE Communications Letters', 5);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 1);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6065724, 'IEEE Wireless Communications Letters', 5);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 2);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 3);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593428, 'IEEE Network', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 4);
@@ -174,7 +174,7 @@ def __insert_item(document_id: int, title: str, isnumber: int, abstract: str = "
 
     # if item not exist, do insert command
     sql = """insert into items (document_id, title, isnumber, indexed_datetime, abstract, latest_read_datetime) VALUES 
-        ({}, "{}", {}, "{}", "{}", "{}", "{}");""".format(document_id, title, isnumber, indexed_datetime, abstract, "")
+        ({}, "{}", {}, "{}", "{}", "{}");""".format(document_id, title, isnumber, indexed_datetime, abstract, "")
     
     try:
         conn = sqlite3.connect(__database)
@@ -194,7 +194,7 @@ def __get_all_serials_isnumber()-> list:
 
     result = list()
 
-    sql = """select isnumber, latest_update_datetime from serials order by user_sorted_order;"""
+    sql = """select isnumber, latest_update_datetime from serials order by user_sorted_order asc, isnumber asc;"""
     
     try:
         conn = sqlite3.connect(__database)
@@ -273,7 +273,8 @@ def get_all_unread_items()-> list:
 
     result = list()
 
-    sql = """select items.title, serials.title, items.abstract, items.document_id from items inner join serials on items.isnumber = serials.isnumber where items.latest_read_datetime = "" order by serials.user_sorted_order;"""
+    sql = """select items.title, serials.title, items.abstract, items.document_id from items inner join serials on items.isnumber = serials.isnumber 
+                where items.latest_read_datetime = "" order by serials.user_sorted_order asc, items.isnumber asc;"""
 
     try:
         conn = sqlite3.connect(__database)
@@ -289,6 +290,27 @@ def get_all_unread_items()-> list:
         conn.close()
     except Exception as e:
         print("get_all_unread_items() error:", e, file=sys.stderr)
+        sys.exit(1)
+
+    return result
+
+
+def get_unread_statistics()-> dict:
+
+    result = dict()
+
+    sql = """select serials.title, count(document_id) from items inner join serials on items.isnumber = serials.isnumber 
+                where items.latest_read_datetime = "" group by items.isnumber order by serials.user_sorted_order asc, items.isnumber asc;"""
+
+    try:
+        conn = sqlite3.connect(__database)
+        cur = conn.cursor()
+        cur.execute(sql)
+        for row in cur:
+            result[row[0]] = row[1]
+        conn.close()
+    except Exception as e:
+        print("get_unread_statistics() error:", e, file=sys.stderr)
         sys.exit(1)
 
     return result
@@ -369,6 +391,13 @@ def main()-> None:
         update_early_access()
     
     if __args.list:
+
+        print("Unread document statistics: ")
+        items = get_unread_statistics()
+        for key in items: 
+            print(" {}: {}".format(key, items[key]))
+        print()
+
         __items = get_all_unread_items()
         for __i in range(len(__items)):
             __item = __items[__i]
