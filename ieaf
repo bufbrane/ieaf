@@ -44,9 +44,21 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 然后从最终呈现的HTML中提取所需的数据。
 
 之所以使用上述技术路线而非普通的爬虫库，是因为所需的数据是JS动态加载的，而IEEExplore网站存在较多的反爬虫措施，本脚本的作者也不愿意花太多精力去应对这些反爬虫措施，于是选择大力出奇迹；
-于是缺点是，本脚本只能在GUI系统中运行（创建的chrome进程必须是GUI进程，headless模式抓不到数据），且每抓一个网页要耗费十几至几十秒，以及运行一个完整的浏览器内核所付出的几百MB内存；
-上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了15本期刊）；
+缺点是，本脚本只能在GUI系统中运行（创建的chrome进程必须是GUI进程，headless模式抓不到数据），且每抓一个网页要耗费十几至几十秒，以及运行一个完整的浏览器内核所付出的几百MB内存；
+上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了18本期刊）；考虑到Ieeexplore在墙内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；
 不过，（在经费充足的条件下）计算机可以无限堆算力，但是人的时间精力就这么多，数据抓得再多，你看得完么？
+
+数据库设计：
+serials.user_sorted_order字段用于存储用户自定义的期刊优先级（数字越小优先级越高），本脚本的作者的自定义规则如下：
+中国计算机学会（CCF）推荐A/B/C类国际英文期刊分别对应1~3级；
+SCI一区和二区（SCI分区使用中科院分区标准）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
+IEEE Letters期刊对应5级；
+如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
+
+如果向serials表中插入了新的期刊条目，而该期刊已有的early access数目超过100条时，
+可以通过调用并指定`update_early_access()`方法的`isnumber`、`rowsPerPage`和`pageNumber`三个形参以抓取多个页面的条目；
+本脚本的功能比较简陋，例如“向serials表中插入新的期刊条目并抓取该期刊100条以上的early access条目”这类不常用的功能作者并没有意愿去实现
+（而是倾向于直接在数据库上操作，或是直接修改本脚本），这无疑增加了本脚本的上手难度，未来作者将尽量考虑完善这些功能。
 """
 
 # 墙内用户请配置chromedriver可执行文件路径，墙外用户注释掉下面这一行代码即可
@@ -73,7 +85,8 @@ CREATE TABLE items (
                                   PRIMARY KEY ON CONFLICT FAIL
                                   UNIQUE ON CONFLICT FAIL,
     title                STRING   NOT NULL ON CONFLICT FAIL,
-    isnumber             INTEGER  REFERENCES serials (isnumber) 
+    isnumber             INTEGER  REFERENCES serials (isnumber) ON DELETE CASCADE
+                                                                ON UPDATE CASCADE
                                   NOT NULL,
     indexed_datetime     DATETIME NOT NULL ON CONFLICT FAIL,
     abstract             TEXT,
@@ -92,6 +105,7 @@ CREATE TABLE serials (
 );
 
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4357935, 'Proceedings of the IEEE', 1);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 2);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 1);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 1);
@@ -100,9 +114,11 @@ INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5451756, 'IEEE 
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 2);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5534602, 'IEEE Communications Letters', 5);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 1);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5699970, 'IEEE Transactions on Network and Service Management', 3);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6065724, 'IEEE Wireless Communications Letters', 5);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 3);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593428, 'IEEE Network', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 4);
@@ -392,11 +408,12 @@ def main()-> None:
     
     if __args.list:
 
-        print("Unread document statistics: ")
         items = get_unread_statistics()
-        for key in items: 
-            print(" {}: {}".format(key, items[key]))
-        print()
+        if len(items) > 0:
+            print("Unread document statistics: ")
+            for key in items: 
+                print(" {}: {}".format(key, items[key]))
+            print()
 
         __items = get_all_unread_items()
         for __i in range(len(__items)):
