@@ -40,7 +40,7 @@ __database = os.path.join(sys.path[0], "ieaf.db")
 一个自动化脚本，用于爬取IEEExplore网站上期刊的early access条目
 
 前置条件：
-0. 本脚本强依赖Linux桌面环境（作者懒得移植到Windows平台）；Windows用户可以在WSLg环境下运行，Linux命令行终端用户请配置X server
+0. 本脚本强依赖Linux桌面环境（作者不愿移植到Windows平台……处理Windows环境下的shell命令和文件路径都太痛苦）；Windows用户可以在WSLg环境下运行，Linux命令行终端用户请配置X server
 1. 安装第三方python库selenium
 2. 安装chrome/chromium浏览器（如果你在墙内，为了避免不必要的麻烦，请手动下载同一版本的chrome浏览器和chromedriver，参考第3条），并确保chrome/chromium可以通过PATH环境变量访问到；
 3. 墙内用户需要做的事情，墙外用户可以跳过本条：
@@ -139,8 +139,6 @@ COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
 
     """
-
-    
 
     try:
         conn = sqlite3.connect(__database_path())
@@ -406,8 +404,6 @@ def __check_dependency()-> None:
 
 def main()-> None:
 
-    __check_dependency()
-
     __args = __parse_args()
 
     if __args.initialize:
@@ -418,6 +414,7 @@ def main()-> None:
             sys.exit(1)
 
     if not __args.no_update:
+        __check_dependency()
         update_early_access()
     
     if __args.list:
