@@ -62,8 +62,8 @@ __database = os.path.join(sys.path[0], "ieaf.db")
 数据库设计：
 serials.user_sorted_order字段用于存储用户自定义的期刊优先级（数字越小优先级越高），本脚本的作者的自定义规则如下：
 中国计算机学会（CCF）推荐A/B/C类国际英文期刊分别对应1~3级；
-SCI一区和二区（SCI分区使用中科院分区标准）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
-IEEE Letters期刊对应5级；
+SCI一区和二区（SCI分区使用中科院分区标准，下同）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
+SCI三区收录的国际期刊、IEEE Letters期刊对应5级；
 如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
 
 如果向serials表中插入了新的期刊条目，而该期刊已有的early access数目超过100条时，
@@ -133,7 +133,7 @@ INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE 
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593428, 'IEEE Network', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 5);
 
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
