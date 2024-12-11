@@ -375,7 +375,7 @@ def set_read_flag(document_id_list: list = list())-> None:
             sys.exit(1)
 
 
-def __parse_args()-> None:
+def __parse_args()-> argparse.Namespace:
     parse = argparse.ArgumentParser(prog="ieaf", description="ieaf is an acronym of IEEExplore early access follower.", epilog="https://github.com/bufbrane/ieaf")
     parse.add_argument("-i", "--initialize", action="store_true", help="initialize the database")
     parse.add_argument("-n", "--no-update", action="store_true", dest="no_update", help="skip fetch newest early access items from IEEExplore")
