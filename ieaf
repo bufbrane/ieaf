@@ -177,7 +177,8 @@ def __get_item_by_document_id(document_id: int)-> dict:
 
 def __update_item(document_id: int, title: str, isnumber: int, indexed_datetime, abstract: str = "", latest_read_datetime = "")-> None:
 
-    sql = """update items set title = "{}", isnumber = {}, indexed_datetime = "{}", abstract = "{}", latest_read_datetime = "{}" where document_id = {};""".format(title, isnumber, indexed_datetime, abstract, latest_read_datetime, document_id)
+    sql = """update items set title = "{}", isnumber = {}, indexed_datetime = "{}", abstract = "{}", latest_read_datetime = "{}" 
+        where document_id = {};""".format(title.replace('"', '\''), isnumber, indexed_datetime, abstract.replace('"', '\''), latest_read_datetime, document_id)
 
     try:
         conn = sqlite3.connect(__database_path())
@@ -202,8 +203,8 @@ def __insert_item(document_id: int, title: str, isnumber: int, abstract: str = "
 
     # if item not exist, do insert command
     sql = """insert into items (document_id, title, isnumber, indexed_datetime, abstract, latest_read_datetime) VALUES 
-        ({}, "{}", {}, "{}", "{}", "{}");""".format(document_id, title, isnumber, indexed_datetime, abstract, "")
-    
+        ({}, "{}", {}, "{}", "{}", "{}");""".format(document_id, title.replace('"', '\''), isnumber, indexed_datetime, abstract.replace('"', '\''), "")
+
     try:
         conn = sqlite3.connect(__database_path())
         cur = conn.cursor()
