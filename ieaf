@@ -56,7 +56,7 @@ __database = "/home/bufbrane/Code/ieeexplore_early_access_follower/ieaf.db"
 
 之所以使用上述技术路线而非普通的爬虫库，是因为所需的数据是JS动态加载的，而IEEExplore网站存在较多的反爬虫措施，本脚本的作者也不愿意花太多精力去应对这些反爬虫措施，于是选择大力出奇迹；
 缺点是，本脚本只能在GUI系统中运行（创建的chrome进程必须是GUI进程，headless模式抓不到数据），且每抓一个网页要耗费十几至几十秒，以及运行一个完整的浏览器内核所付出的几百MB内存；
-上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了18本期刊）；考虑到Ieeexplore在墙内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；
+上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了19本期刊）；考虑到Ieeexplore在墙内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；
 不过，（在经费充足的条件下）计算机可以无限堆算力，但是人的时间精力就这么多，数据抓得再多，你看得完么？
 
 数据库设计：
@@ -132,6 +132,7 @@ INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6354260, 'IEEE 
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 3);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 4);
+INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593426, 'IEEE Wireless Communications', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593428, 'IEEE Network', 4);
 INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 5);
 
