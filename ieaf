@@ -64,6 +64,7 @@ serials.user_sorted_order字段用于存储用户自定义的期刊优先级（�
 中国计算机学会（CCF）推荐A/B/C类国际英文期刊分别对应1~3级；
 SCI一区和二区（SCI分区使用中科院分区标准，下同）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
 SCI三区收录的国际期刊、IEEE Letters期刊对应5级；
+缩写（abbreviation）字段，1~3级采用CCF推荐的缩写，其余采用DOI缩写；
 如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
 
 如果向serials表中插入了新的期刊条目，而该期刊已有的early access数目超过100条时，
@@ -112,29 +113,31 @@ CREATE TABLE serials (
                                     UNIQUE ON CONFLICT FAIL
                                     NOT NULL ON CONFLICT FAIL,
     title                  STRING   NOT NULL,
+    abbreviation           STRING,
     user_sorted_order      INTEGER,
     latest_update_datetime DATETIME
 );
 
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4357935, 'Proceedings of the IEEE', 1);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 2);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 1);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 1);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 2);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 2);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5534602, 'IEEE Communications Letters', 5);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 1);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (5699970, 'IEEE Transactions on Network and Service Management', 3);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6065724, 'IEEE Wireless Communications Letters', 5);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 3);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593426, 'IEEE Wireless Communications', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (7593428, 'IEEE Network', 4);
-INSERT INTO serials (isnumber, title, user_sorted_order) VALUES (9652444, 'China Communications', 5);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 'TVT', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4357935, 'Proceedings of the IEEE', 'Proc. IEEE', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 'TITS', 2);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 'TMC', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 'TON', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 'TWC', 2);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 'COMST', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 'TCOM', 2);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5534602, 'IEEE Communications Letters', 'LCOMM', 5);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 'JSAC', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5699970, 'IEEE Transactions on Network and Service Management', 'TNSM', 3);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (6065724, 'IEEE Wireless Communications Letters', 'LWC', 5);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 'MVT', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 'IOT', 3);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 'TGCN', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 'MCOM', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7593426, 'IEEE Wireless Communications', 'MWC', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7593428, 'IEEE Network', 'MNET', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7778228, 'IEEE Transactions on Aerospace and Electronic Systems', 'TAES', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (9652444, 'China Communications', 'JCC', 5);
 
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
@@ -171,6 +174,30 @@ def __get_item_by_document_id(document_id: int)-> dict:
         conn.close()
     except Exception as e:
         print("__get_item_by_document_id() error:", e, file=sys.stderr)
+        sys.exit(1)
+
+    return result
+
+
+def __get_serials_by_isnumber(isnumber: int)-> dict:
+
+    result = dict()
+
+    sql = """select isnumber, title, abbreviation, user_sorted_order, latest_update_datetime from serials where serials = {};""".format(isnumber)
+
+    try:
+        conn = sqlite3.connect(__database_path())
+        cur = conn.cursor()
+        cur.execute(sql)
+        for row in cur:
+            result["isnumber"]               = row[0]
+            result["title"]                  = row[1]
+            result["abbreviation"]           = row[2]
+            result["user_sorted_order"]      = row[3]
+            result["latest_update_datetime"] = row[4]
+        conn.close()
+    except Exception as e:
+        print("__get_serials_by_isnumber() error:", e, file=sys.stderr)
         sys.exit(1)
 
     return result
@@ -303,7 +330,7 @@ def get_all_unread_items()-> list:
 
     result = list()
 
-    sql = """select items.title, serials.title, items.abstract, items.document_id from items inner join serials on items.isnumber = serials.isnumber 
+    sql = """select items.title, serials.title, items.abstract, items.document_id, serials.abbreviation from items inner join serials on items.isnumber = serials.isnumber 
                 where items.latest_read_datetime = "" order by serials.user_sorted_order asc, items.isnumber asc;"""
 
     try:
@@ -316,6 +343,7 @@ def get_all_unread_items()-> list:
             temp_dict["serials"] = row[1]
             temp_dict["abstract"] = row[2]
             temp_dict["document_id"] = row[3]
+            temp_dict["abbreviation"] = row[4]
             result.append(temp_dict)
         conn.close()
     except Exception as e:
@@ -431,6 +459,8 @@ def main()-> None:
         __items = get_all_unread_items()
         for __i in range(len(__items)):
             __item = __items[__i]
+            if __item["abbreviation"] != "":
+                __item["serials"] = __item["abbreviation"]
             print("({})".format(__i + 1), (str(__item["title"])).replace("\n", ""), "|", __item["serials"])
             print("https://ieeexplore.ieee.org/document/{}/  \n".format(__item["document_id"]))
 
