@@ -27,13 +27,13 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 
 
 # 墙内用户请参照下述说明，配置chromedriver可执行文件路径，墙外用户注释掉下面这一行代码即可
-__chromedriver_executable_path = "/home/bufbrane/Code/ieeexplore_early_access_follower/131.0.6778.85/chromedriver-linux64/chromedriver"
+__chromedriver_executable_path = "./chromedriver"
 
 # 墙内用户请参照下述说明，配置chrome目录所在的PATH环境变量，墙外用户只需要确保chrome/chromium可以通过PATH环境变量访问到
-os.environ["PATH"] = "/home/bufbrane/Code/ieeexplore_early_access_follower/131.0.6778.85/chrome-linux64" + ":" + os.environ["PATH"]
+os.environ["PATH"] = "./chrome-linux64" + ":" + os.environ["PATH"]
 
 # （可选）配置数据库文件的路径
-__database = "/home/bufbrane/Code/ieeexplore_early_access_follower/ieaf.db"
+__database = "./ieaf.db"
 
 
 r"""
