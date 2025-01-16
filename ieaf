@@ -36,11 +36,11 @@ os.environ["PATH"] = "/home/bufbrane/Code/ieeexplore_early_access_follower/131.0
 __database = "/home/bufbrane/Code/ieeexplore_early_access_follower/ieaf.db"
 
 
-"""
+r"""
 一个自动化脚本，用于爬取IEEExplore网站上期刊的early access条目
 
 前置条件：
-0. 本脚本强依赖Linux桌面环境（作者不愿移植到Windows平台……处理Windows环境下的shell命令和文件路径都太痛苦）；Windows用户可以在WSLg环境下运行，Linux命令行终端用户请配置X server
+0. 本脚本强依赖Linux桌面环境（作者不愿移植到Windows平台……处理Windows环境下的shell命令和文件路径都太痛苦）；Windows用户可以在WSLg环境下运行，Linux命令行终端用户可以将X会话转发至VcxSrv（Windows上的X11客户端）或Xvfb（Linux上的headless显示器）
 1. 安装第三方python库selenium
 2. 安装chrome/chromium浏览器（如果你在墙内，为了避免不必要的麻烦，请手动下载同一版本的chrome浏览器和chromedriver，参考第3条），并确保chrome/chromium可以通过PATH环境变量访问到；
 3. 墙内用户需要做的事情，墙外用户可以跳过本条：
@@ -55,8 +55,8 @@ __database = "/home/bufbrane/Code/ieeexplore_early_access_follower/ieaf.db"
 然后从最终呈现的HTML中提取所需的数据。
 
 之所以使用上述技术路线而非普通的爬虫库，是因为所需的数据是JS动态加载的，而IEEExplore网站存在较多的反爬虫措施，本脚本的作者也不愿意花太多精力去应对这些反爬虫措施，于是选择大力出奇迹；
-缺点是，本脚本只能在GUI系统中运行（创建的chrome进程必须是GUI进程，headless模式抓不到数据），且每抓一个网页要耗费十几至几十秒，以及运行一个完整的浏览器内核所付出的几百MB内存；
-上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了19本期刊）；考虑到Ieeexplore在墙内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；
+缺点是，本脚本只能在GUI系统中运行（创建的chrome进程必须是GUI进程，--headless模式抓不到数据；可以使用xvfb-run命令来运行），且每抓一个网页要耗费十几至几十秒，以及运行一个完整的浏览器内核所付出的几百MB内存；
+上述约束条件使得本脚本只适合抓取少量期刊（比如__init_database()方法中的SQL脚本仅预置了20本期刊）；考虑到Ieeexplore在墙内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；
 不过，（在经费充足的条件下）计算机可以无限堆算力，但是人的时间精力就这么多，数据抓得再多，你看得完么？
 
 数据库设计：
@@ -67,10 +67,13 @@ SCI三区收录的国际期刊、IEEE Letters期刊对应5级；
 缩写（abbreviation）字段，1~3级采用CCF推荐的缩写，其余采用DOI缩写；
 如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
 
+Tips：
 如果向serials表中插入了新的期刊条目，而该期刊已有的early access数目超过100条时，
 可以通过调用并指定`update_early_access()`方法的`isnumber`、`rowsPerPage`和`pageNumber`三个形参以抓取多个页面的条目；
 本脚本的功能比较简陋，例如“向serials表中插入新的期刊条目并抓取该期刊100条以上的early access条目”这类不常用的功能作者并没有意愿去实现
 （而是倾向于直接在数据库上操作，或是直接修改本脚本），这无疑增加了本脚本的上手难度，未来作者将尽量考虑完善这些功能。
+至于脚本中为啥总是使用绝对路径（而非相对路径），是因为作者倾向于手动部署本脚本（而非docker部署，虽然docker部署更方便，但墙内使用docker hub太麻烦，故放弃）；
+事实上作者是将ieaf.db文件置于Windows的坚果云同步目录下，然后在WSL中的ieaf所在的目录中创建指向前者的符号链接。
 """
 
 
@@ -453,8 +456,8 @@ def main()-> None:
         if len(items) > 0:
             print("Unread document statistics: ")
             for key in items: 
-                print(" {}: {}".format(key, items[key]))
-            print()
+                print("· {}: {}".format(key, items[key]))
+            print("\n")
 
         __items = get_all_unread_items()
         for __i in range(len(__items)):
