@@ -83,7 +83,8 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
 ## Tips:
 
 由于网页加载的时间是动态变化的，如果在抓取过程中网页加载超时导致报错，可以尝试再次运行本脚本；
-如果多次尝试都无法解决超时问题，先检查网络连接是否正常，然后考虑修改`Ieaf.__fetch_early_access_items()`中的`browser.implicitly_wait(15)`为更大值（单位为秒）。
+事实上本脚本的每个命令行参数对应的操作都满足幂等性，这意味着如果脚本运行出现异常时可以再次尝试运行而不破坏运行结果的一致性；
+如果多次尝试都无法解决超时问题，先检查网络连接是否正常，然后考虑修改`Ieaf.__fetch_early_access_items()`中的`browser.implicitly_wait(15)`为更大值（单位为秒）；
 
 """
 
@@ -104,7 +105,7 @@ class Ieaf:
         if not self.database:
             self.database = "./ieaf.db"
 
-        # check database (tables) existence
+        # 1. make sure that database (with two tables) exists
         sql = """select count(*) from sqlite_master where type = "table" and ( name = "serials" or name = "items" );"""
         table_count = 0
         try:
@@ -121,23 +122,23 @@ class Ieaf:
         if table_count == 0:
             self.__init_database()
 
-        # check database (tables) structure        
+        # 2. check database (tables) accessibility        
         self.__delete_item_by_document_id(0xffffffff)
-        self.__delete_serial_by_isnumber(0xffffffff)
+        self.__delete_serial_by_isnumber(0xfffffffe)
         
-        if not self.__insert_serial(0xffffffff, "Ieaf.__init__() test data", 0xffffffff, "Ieaf.__init__() test data", "Ieaf.__init__() test data"):
+        if not self.__insert_serial(0xfffffffe, "Ieaf.__init__() test data", "Ieaf.__init__() test data", 0xdeadbeef, "1970-01-01 00:00:00"):
             print("Ieaf.__init__() error: could not insert serial into database. Suggest to use another database file.", file=sys.stderr)
             sys.exit(1)
         
-        if not self.__insert_item(0xffffffff, "Ieaf.__init__() test data", 0xffffffff, "Ieaf.__init__() test data"):
+        if not self.__insert_item(0xffffffff, "Ieaf.__init__() test data", 0xfffffffe, "Ieaf.__init__() test data"):
             print("Ieaf.__init__() error: could not insert item into database. Suggest to use another database file.", file=sys.stderr)
             sys.exit(1)
         
         self.__delete_item_by_document_id(0xffffffff)
-        self.__delete_serial_by_isnumber(0xffffffff)
+        self.__delete_serial_by_isnumber(0xfffffffe)
 
-        # check chrome/chromium and chromedriver existence
-        if os.name == "posix":
+        # 3. check chrome/chromium and chromedriver existence
+        if os.name == "posix": # for Linux (/bin/sh)
             if os.system("chrome --version > /dev/null 2>&1") == 0:
                 pass
             elif os.system("chromium --version > /dev/null 2>&1") == 0:
@@ -150,7 +151,7 @@ class Ieaf:
                 print("Error: cound not find chromedriver.", file=sys.stderr)
                 sys.exit(1)
 
-        elif os.name == "nt":
+        elif os.name == "nt": # for Windows (C:\Windows\System32\cmd.exe)
             if os.system("where chrome 1>NUL 2>NUL") == 0:
                 pass
             elif os.system("where chromium 1>NUL 2>NUL") == 0:
@@ -464,26 +465,26 @@ PRAGMA foreign_keys = on;
         return result
 
 
-    def update_early_access(self, isnumber: int = 0)-> None:
+    def update_early_access(self, isnumber_list: list = list())-> None:
+        '''
+        if isnumber_list is empty then update all the serials, otherwise only the serials in isnumber_list is updated.
+        '''
 
-        isnumber_list = list()
-        if isnumber != 0:
-            isnumber_list.append(isnumber)
-        else:
+        if len(isnumber_list) == 0:
             isnumber_list = self.__get_all_serials_isnumber()
 
-        for i in isnumber_list:
-
+        for isnumber in isnumber_list:
             # to ensure the idempotence of the operation, delete the existing unread items first.
-            for item in self.__get_unread_items_in_serial(i):
+            for item in self.__get_unread_items_in_serial(isnumber):
                 self.__delete_item_by_document_id(item)
 
-            for p in range(1, 20):
-                temp_num_of_unread_items = len(self.__get_unread_items_in_serial(i))
-                for item in self.__fetch_early_access_items(isnumber=i, pageNumber=p):
-                    self.__insert_item(item["document_id"], item["title"], i)
+            # fetch no more than 20 pages (100 items per page) of each serials
+            for pageNumber in range(1, 20):
+                temp_num_of_unread_items = len(self.__get_unread_items_in_serial(isnumber))
+                for item in self.__fetch_early_access_items(isnumber, pageNumber):
+                    self.__insert_item(item["document_id"], item["title"], isnumber)
                 # newly fetched items less than 100 thus no need to fetch more pages
-                if len(self.__get_unread_items_in_serial(i)) - temp_num_of_unread_items < 100:
+                if len(self.__get_unread_items_in_serial(isnumber)) - temp_num_of_unread_items < 100:
                     break
             
 
