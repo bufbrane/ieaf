@@ -78,7 +78,9 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
     如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
 - `serials.abbreviation`字段用于存储期刊的缩略名，1~3级采用CCF推荐的缩写，其余采用DOI缩写；
 
-如需跟踪其他期刊或是删除上述预置期刊，请直接在数据库的`serials`表上做增删操作（该功能不常用，所以作者懒得在脚本中实现）；表结构详见`Ieaf.__init_database()`中的数据库初始化SQL脚本。
+如需跟踪其他期刊或是删除上述预置期刊，请直接在数据库的`serials`表上做增删操作（该功能不常用，作者懒得在脚本中实现，也不愿意将与serials相关的操作改为public方法）；
+表结构详见`Ieaf.__init_database()`中的数据库初始化SQL脚本。
+
 
 ## Tips:
 
@@ -90,7 +92,7 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
 
 class Ieaf:
 
-    def __init__(self, chrome_path: str, chromedriver: str, database: str):
+    def __init__(self, chrome_path: str = None, chromedriver: str = None, database: str = None):
 
         self.chrome_path = chrome_path
         self.chromedriver = chromedriver
@@ -136,33 +138,6 @@ class Ieaf:
         
         self.__delete_item_by_document_id(0xffffffff)
         self.__delete_serial_by_isnumber(0xfffffffe)
-
-        # 3. check chrome/chromium and chromedriver existence
-        if os.name == "posix": # for Linux (/bin/sh)
-            if os.system("chrome --version > /dev/null 2>&1") == 0:
-                pass
-            elif os.system("chromium --version > /dev/null 2>&1") == 0:
-                pass
-            else:
-                print("Error: cound not find chrome/chromium.", file=sys.stderr)
-                sys.exit(1)
-
-            if os.system("{} --version > /dev/null 2>&1".format(self.chromedriver)) != 0:
-                print("Error: cound not find chromedriver.", file=sys.stderr)
-                sys.exit(1)
-
-        elif os.name == "nt": # for Windows (C:\Windows\System32\cmd.exe)
-            if os.system("where chrome 1>NUL 2>NUL") == 0:
-                pass
-            elif os.system("where chromium 1>NUL 2>NUL") == 0:
-                pass
-            else:
-                print("Error: cound not find chrome/chromium.", file=sys.stderr)
-                sys.exit(1)
-
-            if os.system("{} --version 1>NUL 2>NUL".format(self.chromedriver)) != 0:
-                print("Error: cound not find chromedriver.", file=sys.stderr)
-                sys.exit(1)
 
 
     def __init_database(self)-> None:
@@ -465,10 +440,41 @@ PRAGMA foreign_keys = on;
         return result
 
 
+    def __check_chrome_and_chromedriver(self)-> None:
+        
+        if os.name == "posix": # for Linux (/bin/sh)
+            if os.system("chrome --version > /dev/null 2>&1") == 0:
+                pass
+            elif os.system("chromium --version > /dev/null 2>&1") == 0:
+                pass
+            else:
+                print("Error: cound not find chrome/chromium.", file=sys.stderr)
+                sys.exit(1)
+
+            if os.system("{} --version > /dev/null 2>&1".format(self.chromedriver)) != 0:
+                print("Error: cound not find chromedriver.", file=sys.stderr)
+                sys.exit(1)
+
+        elif os.name == "nt": # for Windows (C:\Windows\System32\cmd.exe)
+            if os.system("where chrome 1>NUL 2>NUL") == 0:
+                pass
+            elif os.system("where chromium 1>NUL 2>NUL") == 0:
+                pass
+            else:
+                print("Error: cound not find chrome/chromium.", file=sys.stderr)
+                sys.exit(1)
+
+            if os.system("{} --version 1>NUL 2>NUL".format(self.chromedriver)) != 0:
+                print("Error: cound not find chromedriver.", file=sys.stderr)
+                sys.exit(1)
+
+
     def update_early_access(self, isnumber_list: list = list())-> None:
         '''
         if isnumber_list is empty then update all the serials, otherwise only the serials in isnumber_list is updated.
         '''
+
+        self.__check_chrome_and_chromedriver()
 
         if len(isnumber_list) == 0:
             isnumber_list = self.__get_all_serials_isnumber()
