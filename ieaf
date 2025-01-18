@@ -41,12 +41,12 @@ r"""
 
 ## 前置条件：
 
-0. 本脚本强依赖GUI；Linux非GUI用户可以使用`Xvfb`（只需在命令前添加`xvfb-run`即可）；
-1. 安装第三方python库`selenium`；
-2. 下载并解压同一版本的测试版chrome和chromedriver：https://googlechromelabs.github.io/chrome-for-testing/
-3. 通过`--chrome-path`命令行参数传入chrome可执行文件所在的目录（注意是目录），或是将该目录添加到`PATH`环境变量；
-4. 通过`--chromedriver`命令行参数传入chromedriver可执行文件（注意是可执行文件）的路径，或是将该路径设置为`CHROMEDRIVER`环境变量；
-5. 通过`--database`命令行参数传入sqlite3数据库文件（注意是文件）的路径，或是将路径设置为`IEAF_DATABASE`环境变量；如未指定数据库文件，则默认使用`$PWD/ieaf.db`；
+0. 本脚本强依赖GUI；Linux非GUI用户可以用`Xvfb` 模拟GUI（只需在命令前添加`xvfb-run`即可）；
+1. 安装第三方python库`selenium`；selenium在墙内可能无法自动获取测试版chrome和chromedriver，此时需要手动执行以下三个子步骤；墙外用户请忽略；
+    1. 下载并解压同一版本的测试版chrome和chromedriver：https://googlechromelabs.github.io/chrome-for-testing/
+    2. 通过`--chrome-path`命令行参数传入chrome可执行文件所在的目录（注意是目录），或是将该目录添加到`PATH`环境变量；
+    3. 通过`--chromedriver`命令行参数传入chromedriver可执行文件（注意是可执行文件）的路径，或是将该路径设置为`CHROMEDRIVER`环境变量；
+2. （可选）通过`--database`命令行参数传入sqlite3数据库文件（注意是文件）的路径，或是将路径设置为`IEAF_DATABASE`环境变量；如未指定数据库文件，则默认使用`$PWD/ieaf.db`；
 
 
 ## 工作方式：
@@ -402,7 +402,10 @@ PRAGMA foreign_keys = on;
         result = list()
 
         try:
-            service = ChromeService(executable_path=self.chromedriver)
+            if self.chromedriver:
+                service = ChromeService(executable_path=self.chromedriver)
+            else:
+                service = ChromeService()
             options = webdriver.ChromeOptions()
             browser = webdriver.Chrome(service=service, options=options)
 
@@ -474,7 +477,8 @@ PRAGMA foreign_keys = on;
         if isnumber_list is empty then update all the serials, otherwise only the serials in isnumber_list is updated.
         '''
 
-        self.__check_chrome_and_chromedriver()
+        if self.chromedriver:
+            self.__check_chrome_and_chromedriver()
 
         if len(isnumber_list) == 0:
             isnumber_list = self.__get_all_serials_isnumber()
@@ -485,14 +489,16 @@ PRAGMA foreign_keys = on;
                 self.__delete_item_by_document_id(item)
 
             # fetch no more than 20 pages (100 items per page) of each serials
-            for pageNumber in range(1, 20):
-                temp_num_of_unread_items = len(self.__get_unread_items_in_serial(isnumber))
-                for item in self.__fetch_early_access_items(isnumber, pageNumber):
+            last_num_of_unread_items = 0
+            for page in range(1, 20):
+                for item in self.__fetch_early_access_items(isnumber, pageNumber=page):
                     self.__insert_item(item["document_id"], item["title"], isnumber)
-                # newly fetched items less than 100 thus no need to fetch more pages
-                if len(self.__get_unread_items_in_serial(isnumber)) - temp_num_of_unread_items < 100:
+                num_of_unread_items = len(self.__get_unread_items_in_serial(isnumber))
+                if num_of_unread_items - last_num_of_unread_items < 90:
                     break
-            
+                else:
+                    last_num_of_unread_items = num_of_unread_items
+
 
     def get_unread_statistics(self)-> dict:
 
