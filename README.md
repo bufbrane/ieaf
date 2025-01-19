@@ -1,10 +1,10 @@
 # ieaf: IEEEXplore early access follower
 
-一个自动化脚本，用于追踪[IEEEXplore](https://ieeexplore.ieee.org)上的期刊的early access条目。[`ieaf`](https://github.com/bufbrane/ieaf/blob/main/ieaf)即为可执行文件。
+一个python自动化脚本，用于追踪[IEEEXplore](https://ieeexplore.ieee.org)上的期刊的early access条目。[`ieaf`](https://github.com/bufbrane/ieaf/blob/main/ieaf)即为可执行文件。
 
 本脚本服务于如下的工作流：
 
-0. IEEEXplore网站通常会在每天夜里（0:00~8:00 UTC+08:00，下同）挂出已录用论文的early access；
+0. IEEEXplore通常会在每天夜里（0:00~8:00 UTC+08:00，下同）挂出已录用论文的early access；
 1. 每天早上运行本脚本抓取early access条目（本脚本会将其存入数据库），列出未读的论文标题和对应的URL，然后基于论文标题进行初步筛选；
 2. 对于感兴趣的论文标题，点击URL跳转到浏览器阅读摘要，进行进一步的筛选；阅读完摘要后如果觉得有必要阅读全文，再用文献管理软件将其下载（推荐以日期创建分类）以备后续阅读；
 3. 筛选完毕，将上述论文标记为已读；标记为已读的论文在下次抓取时不再作为未读论文被列出，如此便实现了对每天上新的early access的追踪。
@@ -12,14 +12,7 @@
 
 ## 前置条件：
 
-0. 本脚本需要在GUI系统中运行（例如Windows，或是有桌面环境的Linux）；
 
-    Linux非GUI用户可以用Xvfb模拟GUI，需要安装软件包`xvfb`然后用`xvfb-run`命令运行本脚本，以Debian为例：
-    ```bash
-    sudo apt-get install -y xvfb
-    xvfb-run ./ieaf
-    ```
-    如果你不想被频繁弹出的浏览器窗口打断工作，也可以使用这一方式运行本脚本，Windows用户也可以在WSL2中使用这一方式运行本脚本。
 1. 安装第三方python库`selenium`以及软件包`chromium-driver`和`chromium`，以Debian为例：
     ```bash
     sudo apt-get install -y python3-selenium chromium-driver chromium
@@ -29,9 +22,17 @@
     则可以使用以下方式手动安装：
     
     1. 下载对应平台且**版本号相同**的chrome和chromedriver：[https://googlechromelabs.github.io/chrome-for-testing/](https://googlechromelabs.github.io/chrome-for-testing/)，并分别解压；
-    2. 将chromedriver这个**可执行文件**复制（或软链接）到chrome所在的目录，或是通过`--chromedriver`命令行参数传入该可执行文件的路径，或是将该可执行文件的路径设置为`CHROMEDRIVER`环境变量；
+    2. 将chromedriver这个**可执行文件**复制（或软链接）到chrome所在的目录中，或是通过`--chromedriver`命令行参数传入该可执行文件的路径，或是将该可执行文件的路径设置为`CHROMEDRIVER`环境变量；
     3. 将chrome所在的**目录**添加到`PATH`环境变量，或是通过`--chrome-path`命令行参数传入该目录；
-2. （可选）通过`--database`命令行参数传入**数据库文件**的路径，或是将该路径设置为`IEAF_DATABASE`环境变量；如未指定数据库文件，则默认使用`$PWD/ieaf.db`。
+2. 本脚本需要在GUI系统中运行（例如Windows，或是有桌面环境的Linux）；
+
+    Linux非GUI用户可以用Xvfb模拟GUI，需要安装软件包`xvfb`然后用`xvfb-run`命令运行本脚本，以Debian为例：
+    ```bash
+    sudo apt-get install -y xvfb
+    xvfb-run ./ieaf
+    ```
+    如果你不想被频繁弹出的浏览器窗口打断工作，也可以使用这一方式运行本脚本，Windows用户也可以在WSL2中使用这一方式运行本脚本。
+3. （可选）通过`--database`命令行参数传入**数据库文件**的路径，或是将该路径设置为`IEAF_DATABASE`环境变量；如未指定数据库文件，则默认使用`$PWD/ieaf.db`。
 
 
 ## 工作方式：
