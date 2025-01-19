@@ -41,6 +41,8 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
 
 命令行参数`-l`可以列出所有未读的条目；命令行参数`-r`（通常与`-n`合用，即`-nr`）可以将所有未读的条目设置为已读。
 
+更多细节详见源代码`main()`方法。
+
 
 ## 抓取原理：
 
@@ -67,8 +69,7 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
     如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
 - `serials.abbreviation`字段用于存储期刊的缩略名，本脚本内预置的期刊的1~3级采用CCF推荐的缩写，其余采用DOI缩写；
 
-如需跟踪其他期刊或是删除上述预置期刊，请直接在数据库的`serials`表上做增删操作（该功能不常用，作者懒得在脚本中实现，也不愿意将与serials相关的操作改为public方法），例如可以使用[SQLiteStudio](https://github.com/pawelsalawa/sqlitestudio)对数据库进行编辑。
-
+如需跟踪其他期刊或是删除上述预置期刊，请直接在数据库的`serials`表上做增删操作（该功能不常用，作者懒得在脚本中实现，也不愿意将与serials相关的操作改为public方法），例如可以使用[SQLiteStudio](https://github.com/pawelsalawa/sqlitestudio)对`serials`表进行增删操作。
 
 
 ## Tips:
