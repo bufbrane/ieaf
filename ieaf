@@ -21,74 +21,10 @@ import sys
 import time
 import argparse
 import sqlite3
-from selenium import webdriver                  # 需要安装第三方库selenium
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 
-r"""
-
-# ieaf: IEEEXplore early access follower
-
-一个自动化脚本，用于追踪[IEEEXplore](https://ieeexplore.ieee.org)上的期刊的early access条目。
-
-本脚本服务于如下的工作流：
-
-0. IEEEXplore网站通常会在每天夜里（0:00~8:00 UTF+8，下同）挂出已录用论文的early access；
-1. 每天早上运行本脚本抓取early access条目，使用命令行参数`-l`列出未读的论文标题和对应的URL，然后基于论文标题进行初步筛选；
-2. 对于感兴趣的论文标题，点击URL跳转到浏览器阅读摘要，进行进一步的筛选；阅读完摘要后如果觉得有必要阅读全文，再用文献管理软件将其下载（推荐以日期创建分类）以备后续阅读；
-3. 筛选完毕，使用命令行参数`-nr`将上述论文标记为已读；标记为已读的论文在下次抓取时不再作为未读论文被列出，如此便实现了对每天上新的early access的追踪。
-
-
-## 前置条件：
-
-0. 本脚本强依赖GUI；Linux非GUI用户可以用`Xvfb` 模拟GUI（只需在命令前添加`xvfb-run`即可）；
-1. 安装第三方python库`selenium`；selenium在墙内可能无法自动获取测试版chrome和chromedriver，此时需要手动执行以下三个子步骤；墙外用户请忽略；
-    1. 下载并解压同一版本的测试版chrome和chromedriver：https://googlechromelabs.github.io/chrome-for-testing/
-    2. 通过`--chrome-path`命令行参数传入chrome可执行文件所在的目录（注意是目录），或是将该目录添加到`PATH`环境变量；
-    3. 通过`--chromedriver`命令行参数传入chromedriver可执行文件（注意是可执行文件）的路径，或是将该路径设置为`CHROMEDRIVER`环境变量；
-2. （可选）通过`--database`命令行参数传入sqlite3数据库文件（注意是文件）的路径，或是将路径设置为`IEAF_DATABASE`环境变量；如未指定数据库文件，则默认使用`$PWD/ieaf.db`；
-
-
-## 工作方式：
-
-ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文章条目，使用数据库跟踪并找出最新的未读条目；命令行参数`-n`可以跳过抓取。
-
-命令行参数`-l`可以列出所有未读的条目；命令行参数`-r`可以将所有未读的条目设置为已读。
-
-
-## 爬虫原理：
-
-使用selenium库，通过chromedriver控制chrome加载和渲染网页，然后从最终呈现的HTML中提取所需的数据。
-
-之所以使用上述技术路线而非普通的爬虫库，是因为所需的数据是JS动态加载的，而IEEEXplore网站存在较多的反爬虫措施，本脚本的作者也不愿意花太多精力去应对这些反爬虫措施，于是选择大力出奇迹；
-缺点是，本脚本只能在GUI环境中运行（创建的chrome进程必须是GUI进程，`--headless`模式抓不到数据），且每抓一个网页要耗费十多秒，以及运行一个完整的浏览器内核需要几百MB内存；
-上述约束条件使得本脚本只适合抓取少量期刊（比如`Ieaf.__init_database()`方法中仅预置了20本期刊）；
-考虑到IEEEXplore在国内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；不过，（在经费充足的条件下）计算机可以无限堆算力，但是人的时间精力就这么多，数据抓得再多，你看得完么？
-
-
-## 数据库设计：
-
-- `items.document_id`字段唯一地定义了一篇论文，取自论文页面的URL（例如https://ieeexplore.ieee.org/abstract/document/4357009）；
-- `serials.isnumber`字段唯一地定义了一本期刊，取自期刊的early access页面的URL（例如https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=5594698）；
-- `serials.user_sorted_order`字段用于存储用户自定义的期刊优先级（数字越小优先级越高），本脚本的作者的自定义规则如下：
-    - 中国计算机学会（CCF）推荐A/B/C类国际英文期刊分别对应1~3级；
-    - SCI一区和二区（SCI分区使用中科院分区标准，下同）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
-    - SCI三区收录的国际期刊、IEEE Letters期刊对应5级；
-    
-    如果上述自定义规则与某高校博士研究生申请博士学位的论文成果分档标准雷同，纯属此地无银三百两。
-- `serials.abbreviation`字段用于存储期刊的缩略名，1~3级采用CCF推荐的缩写，其余采用DOI缩写；
-
-如需跟踪其他期刊或是删除上述预置期刊，请直接在数据库的`serials`表上做增删操作（该功能不常用，作者懒得在脚本中实现，也不愿意将与serials相关的操作改为public方法）；
-表结构详见`Ieaf.__init_database()`中的数据库初始化SQL脚本。
-
-
-## Tips:
-
-由于网页加载的时间是动态变化的，如果在抓取过程中网页加载超时导致报错，可以尝试再次运行本脚本；
-事实上本脚本的每个命令行参数对应的操作都满足幂等性，这意味着如果脚本运行出现异常时可以再次尝试运行而不破坏运行结果的一致性；
-如果多次尝试都无法解决超时问题，先检查网络连接是否正常，然后考虑修改`Ieaf.__fetch_early_access_items()`中的`browser.implicitly_wait(15)`为更大值（单位为秒）；
-
-"""
 
 class Ieaf:
 
@@ -573,7 +509,7 @@ PRAGMA foreign_keys = on;
 
 def parse_args()-> argparse.Namespace:
 
-        parser = argparse.ArgumentParser(prog="ieaf", description="ieaf is an acronym of IEEExplore early access follower.", epilog="https://github.com/bufbrane/ieaf")
+        parser = argparse.ArgumentParser(prog="ieaf", description="ieaf is an acronym of IEEExplore early access follower.", epilog="For more details, please visit https://github.com/bufbrane/ieaf")
         
         parser.add_argument("-n", "--no-update", action="store_true", dest="no_update", help="skip fetching early access items from IEEExplore")
         parser.add_argument("-l", "--list", action="store_true", help="list all of unread documents")
