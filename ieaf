@@ -57,19 +57,19 @@ class Ieaf:
             self.__init_database()
 
         # 2. check database (tables) accessibility        
-        self.__delete_item_by_document_id(0xffffffff)
-        self.__delete_serial_by_isnumber(0xfffffffe)
+        self.__delete_item_by_document_id(0xdeadbeef)
+        self.__delete_serial_by_isnumber(0xdeadbeef)
         
-        if not self.__insert_serial(0xfffffffe, "Ieaf.__init__() test data", "Ieaf.__init__() test data", 0xdeadbeef, "1970-01-01 00:00:00"):
+        if not self.__insert_serial(0xdeadbeef, "Ieaf.__init__() test data", "Ieaf.__init__() test data", 0xdeadbeef, "1970-01-01 00:00:00"):
             print("Ieaf.__init__() error: could not insert serial into database. Suggest to use another database file.", file=sys.stderr)
             sys.exit(1)
         
-        if not self.__insert_item(0xffffffff, "Ieaf.__init__() test data", 0xfffffffe, "Ieaf.__init__() test data"):
+        if not self.__insert_item(0xdeadbeef, "Ieaf.__init__() test data", 0xdeadbeef, "Ieaf.__init__() test data"):
             print("Ieaf.__init__() error: could not insert item into database. Suggest to use another database file.", file=sys.stderr)
             sys.exit(1)
         
-        self.__delete_item_by_document_id(0xffffffff)
-        self.__delete_serial_by_isnumber(0xfffffffe)
+        self.__delete_item_by_document_id(0xdeadbeef)
+        self.__delete_serial_by_isnumber(0xdeadbeef)
 
 
     def __init_database(self)-> None:
@@ -458,7 +458,7 @@ PRAGMA foreign_keys = on;
                 statistics_dict[row[0]] = row[1]
             conn.close()
         except Exception as e:
-            print("Ieaf.get_unread_statistics() error:", e, " SQL:", sql, file=sys.stderr)
+            print("Ieaf.get_all_unread_items() error:", e, " SQL:", sql, file=sys.stderr)
             sys.exit(1)
 
         items_list = list()
@@ -467,11 +467,11 @@ PRAGMA foreign_keys = on;
             unread_items = self.__get_unread_items_in_serial(isnumber)
             for document_id in unread_items:
                 temp_dict = dict()
-                temp_dict["title"] = unread_items[document_id]
-                temp_dict["serials"] = isnumber
-                temp_dict["abstract"] = (self.__get_item_by_document_id(document_id))["abstract"]
                 temp_dict["document_id"] = document_id
-                temp_dict["abbreviation"] = (self.__get_serial_by_isnumber(isnumber))["abbreviation"]
+                temp_dict["title"] = unread_items[document_id]
+                temp_dict["abstract"] = (self.__get_item_by_document_id(document_id))["abstract"]
+                temp_dict["serials.title"] = (self.__get_serial_by_isnumber(isnumber))["title"]
+                temp_dict["serials.abbreviation"] = (self.__get_serial_by_isnumber(isnumber))["abbreviation"]
                 items_list.append(temp_dict)
 
         return (statistics_dict, items_list)
@@ -536,16 +536,16 @@ def main():
         statistics, items = ieaf.get_all_unread_items()
 
         if len(statistics) > 0:
-            print("Unread document statistics: ")
+            print("Unread documents statistics: ")
             for key in statistics: 
                 print("· {}: {}".format(key, statistics[key]))
             print("\n")
 
         for i in range(len(items)):
             item = items[i]
-            if item["abbreviation"] != "":
-                item["serials"] = item["abbreviation"]
-            print("({})".format(i + 1), (str(item["title"])).replace("\n", ""), "|", item["serials"])
+            if item["serials.abbreviation"] != "":
+                item["serials.title"] = item["serials.abbreviation"]
+            print("({})".format(i + 1), (str(item["title"])).replace("\n", ""), "|", item["serials.title"])
             print("https://ieeexplore.ieee.org/document/{}  \n".format(item["document_id"]))
 
     if args.read:
