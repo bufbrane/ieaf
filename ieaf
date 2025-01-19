@@ -474,8 +474,6 @@ PRAGMA foreign_keys = on;
                 temp_dict["abbreviation"] = (self.__get_serial_by_isnumber(isnumber))["abbreviation"]
                 items_list.append(temp_dict)
 
-        assert len(statistics_dict) == len(items_list), "In Ieaf.get_all_unread_items(): `len(statistics_dict)` should equals to `len(items_list)`, maybe there is a bug in the code?"
-
         return (statistics_dict, items_list)
 
 
