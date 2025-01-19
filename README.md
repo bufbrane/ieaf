@@ -14,11 +14,18 @@
 
 0. 本脚本需要在GUI系统中运行（例如Windows，或是有桌面环境的Linux）；
 
-    Linux非GUI用户可以用Xvfb模拟GUI（需要安装软件包`xvfb`，以Debian为例：`sudo apt install xvfb`，然后用`xvfb-run ./ieaf`方式运行本脚本）；如果你不想被频繁弹出的浏览器窗口打断工作，也可以使用这一方式运行本脚本，Windows用户也可以在WSL2中使用这一方式运行本脚本。
-1. 安装第三方python库`selenium`以及软件包`chromium-driver`和`chromium`，以Debian为例：`sudo apt install python3-selenium chromium-driver chromium`；
-    
+    Linux非GUI用户可以用Xvfb模拟GUI，需要安装软件包`xvfb`然后用`xvfb-run`命令运行本脚本，以Debian为例：
+    ```bash
+    sudo apt-get install -y xvfb
+    xvfb-run ./ieaf
+    ```
+    如果你不想被频繁弹出的浏览器窗口打断工作，也可以使用这一方式运行本脚本，Windows用户也可以在WSL2中使用这一方式运行本脚本。
+1. 安装第三方python库`selenium`以及软件包`chromium-driver`和`chromium`，以Debian为例：
+    ```bash
+    sudo apt-get install -y python3-selenium chromium-driver chromium
+    ```
     一般而言，在Debian上用apt安装`python3-selenium`包时会同时安装（包括但不限于）`chromium-driver`和`chromium`这两个依赖包；
-    如果所用的Linux发行版未提供后二者，或是缺乏root权限无法安装后二者，或是使用PyPi源安装`selenium`不包括后二者，或是在Windows上缺乏包管理器和软件源无法用一行命令安装后二者，
+    如果所用的Linux发行版未提供后二者，或是缺乏root权限无法安装后二者，或是使用PyPI源安装`selenium`不包括后二者，或是在Windows上缺乏包管理器和软件源无法用一行命令安装后二者，
     则可以使用以下方式手动安装：
     
     1. 下载对应平台且**版本号相同**的chrome和chromedriver：[https://googlechromelabs.github.io/chrome-for-testing/](https://googlechromelabs.github.io/chrome-for-testing/)，并分别解压；
@@ -49,8 +56,8 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
 
 数据库包含两张表`serials`和`items`，分别用于记录期刊信息和论文信息；表结构详见源代码中`Ieaf.__init_database()`方法内置的数据库初始化SQL脚本。
 
-- `items.document_id`字段唯一地定义了一篇论文，取自论文页面的URL（例如https://ieeexplore.ieee.org/abstract/document/4357009）；
-- `serials.isnumber`字段唯一地定义了一本期刊，取自期刊的early access页面的URL（例如https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=5594698）；
+- `items.document_id`字段唯一地定义了一篇论文，取自论文页面的URL（例如 https://ieeexplore.ieee.org/abstract/document/4357009 ）；
+- `serials.isnumber`字段唯一地定义了一本期刊，取自期刊的early access页面的URL（例如 https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=5594698 ）；
 - `serials.user_sorted_order`字段用于存储用户自定义的期刊优先级（数字越小优先级越高），本脚本内预置的期刊的自定义规则如下：
     - 中国计算机学会（CCF）推荐A/B/C类国际英文期刊分别对应1~3级；
     - SCI一区和二区（SCI分区使用中科院分区标准，下同）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
