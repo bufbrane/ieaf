@@ -459,7 +459,7 @@ PRAGMA foreign_keys = on;
                 print("{} new item(s) found.".format(len(self.__get_unread_items_in_serial(isnumber))), flush=True)
 
         if self.verbose:
-            print("Fetching completed.", flush=True)
+            print("Fetching completed, found {} new item(s) in total.".format(len(self.get_all_unread_items()[1])), flush=True)
 
 
     def get_all_unread_items(self)-> tuple:
