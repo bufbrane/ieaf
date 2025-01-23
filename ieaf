@@ -22,9 +22,6 @@ import sys
 import time
 import argparse
 import sqlite3
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service as ChromeService
 
 
 class Ieaf:
@@ -35,6 +32,8 @@ class Ieaf:
         self.chromedriver = chromedriver
         self.database = database
         self.verbose = verbose
+
+        self.spider = "selenium"
 
         # 1. make sure that database (with two tables) exists
         if not self.database:
@@ -330,8 +329,62 @@ PRAGMA foreign_keys = on;
         return True
 
 
-    def __fetch_early_access_items(self, isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
+    def __fetch_early_access_items_by_selenium(self, isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
         
+        try:
+            from selenium import webdriver
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.chrome.service import Service as ChromeService
+        except ImportError as e:
+            print("Ieaf.__fetch_early_access_items_by_selenium() error: ", e, file=sys.stderr)
+            print("Are to forget to install selenium?", file=sys.stderr)
+            sys.exit(1)
+
+        # check chrome and chromedriver
+        if os.name == "posix": # for Linux (/bin/sh)
+            if self.chrome_path and (not os.environ["PATH"].find(self.chrome_path)):
+                os.environ["PATH"] = self.chrome_path + ":" + os.environ["PATH"]
+
+            if os.system("chrome --version > /dev/null 2>&1") == 0:
+                pass
+            elif os.system("chromium --version > /dev/null 2>&1") == 0:
+                pass
+            else:
+                print("Ieaf.__fetch_early_access_items_by_selenium() error: cound not find chrome/chromium.", file=sys.stderr)
+                sys.exit(1)
+
+            if os.system("{} --version > /dev/null 2>&1".format(self.chromedriver)) == 0:
+                pass
+            elif os.system("chromedriver --version > /dev/null 2>&1") == 0:
+                self.chromedriver = os.popen("which chromedriver").readline().strip()
+            else:
+                print("Ieaf.__fetch_early_access_items_by_selenium() error: cound not find chromedriver.", file=sys.stderr)
+                sys.exit(1)
+
+        elif os.name == "nt": # for Windows (C:\Windows\System32\cmd.exe)
+            if self.chrome_path:
+                os.environ["PATH"] = self.chrome_path + ";" + os.environ["PATH"]
+
+            if os.system("where chrome 1>NUL 2>NUL") == 0:
+                pass
+            elif os.system("where chromium 1>NUL 2>NUL") == 0:
+                pass
+            else:
+                print("Ieaf.__fetch_early_access_items_by_selenium() error: cound not find chrome/chromium.", file=sys.stderr)
+                sys.exit(1)
+
+            if os.system("{} --version 1>NUL 2>NUL".format(self.chromedriver)) == 0:
+                pass
+            elif os.system("chromedriver --version 1>NUL 2>NUL") == 0:
+                self.chromedriver = os.popen("where chromedriver").readline().strip()
+            else:
+                print("Ieaf.__fetch_early_access_items_by_selenium() error: cound not find chromedriver.", file=sys.stderr)
+                sys.exit(1)
+
+        else:
+            print("Ieaf.__fetch_early_access_items_by_selenium() error: unsupported platform: {}".format(os.name), file=sys.stderr)
+            sys.exit(1)
+
         result = list()
 
         try:
@@ -367,62 +420,24 @@ PRAGMA foreign_keys = on;
             browser.quit()
 
         except Exception as e:
-            print("Ieaf.__fetch_early_access_items() error:", e, file=sys.stderr)
+            print("Ieaf.__fetch_early_access_items_by_selenium() error:", e, file=sys.stderr)
             sys.exit(1)
 
         return result
 
 
-    def __check_chrome_and_chromedriver(self)-> None:
+    def __fetch_early_access_items(self, isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
 
-        if os.name == "posix": # for Linux (/bin/sh)
-            if self.chrome_path:
-                os.environ["PATH"] = self.chrome_path + ":" + os.environ["PATH"]
-
-            if os.system("chrome --version > /dev/null 2>&1") == 0:
-                pass
-            elif os.system("chromium --version > /dev/null 2>&1") == 0:
-                pass
-            else:
-                print("Error: cound not find chrome/chromium.", file=sys.stderr)
-                sys.exit(1)
-
-            if os.system("{} --version > /dev/null 2>&1".format(self.chromedriver)) == 0:
-                pass
-            elif os.system("chromedriver --version > /dev/null 2>&1") == 0:
-                self.chromedriver = os.popen("which chromedriver").readline().strip()
-            else:
-                print("Error: cound not find chromedriver.", file=sys.stderr)
-                sys.exit(1)
-
-        elif os.name == "nt": # for Windows (C:\Windows\System32\cmd.exe)
-            if self.chrome_path:
-                os.environ["PATH"] = self.chrome_path + ";" + os.environ["PATH"]
-
-            if os.system("where chrome 1>NUL 2>NUL") == 0:
-                pass
-            elif os.system("where chromium 1>NUL 2>NUL") == 0:
-                pass
-            else:
-                print("Error: cound not find chrome/chromium.", file=sys.stderr)
-                sys.exit(1)
-
-            if os.system("{} --version 1>NUL 2>NUL".format(self.chromedriver)) == 0:
-                pass
-            elif os.system("chromedriver --version 1>NUL 2>NUL") == 0:
-                self.chromedriver = os.popen("where chromedriver").readline().strip()
-            else:
-                print("Error: cound not find chromedriver.", file=sys.stderr)
-                sys.exit(1)
-
+        if self.spider == "selenium":
+            return self.__fetch_early_access_items_by_selenium(isnumber, sortType, rowsPerPage, pageNumber)
+        
+        # for other spiders
+        
         else:
-            print("Ieaf.__check_chrome_and_chromedriver() error: unsupported platform: {}".format(os.name), file=sys.stderr)
-            sys.exit(1)
+            print("Ieaf.__fetch_early_access_items() Error: unknown spider", file=sys.stderr)
 
 
     def update_early_access(self, isnumber_list: list = list())-> None:
-
-        self.__check_chrome_and_chromedriver()
 
         if len(isnumber_list) == 0:
             isnumber_list = self.__get_all_serials_isnumber()

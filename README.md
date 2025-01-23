@@ -54,6 +54,8 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
 
 上述约束条件使得本脚本只适合抓取少量期刊（比如源代码的`Ieaf.__init_database()`方法中仅预置了20本期刊）；考虑到IEEEXplore在国内的访问速度并不快，因此本脚本不打算通过并行方式加速爬取过程；不过，（在经费充足的条件下）计算机可以无限堆算力，但是人的时间精力就这么多，数据抓得再多，你看得完么？
 
+本脚本与selenium库并非强耦合；可以参考`Ieaf.__fetch_early_access_items_by_selenium()`方法的接口实现新方法来抓取，然后修改`Ieaf.__fetch_early_access_items()`调用新方法。
+
 
 ## 数据库设计：
 
