@@ -272,7 +272,7 @@ PRAGMA foreign_keys = on;
         # if item already exists, do update command rather than insert 
         item = self.__get_item_by_document_id(document_id)
         if len(item) != 0:
-            self.__update_item(document_id, title, isnumber, indexed_datetime, abstract, item["latest_read_datetime"])
+            self.__update_item(document_id, title, isnumber, item["indexed_datetime"], abstract, item["latest_read_datetime"])
             return
 
         # if item not exist, do insert command
