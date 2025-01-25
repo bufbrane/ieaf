@@ -550,6 +550,7 @@ def parse_args()-> argparse.Namespace:
         parser.add_argument("-n", "--no-update", action="store_true", dest="no_update", help="skip fetching early access items from IEEExplore")
         parser.add_argument("-l", "--list", action="store_true", help="list all of unread documents")
         parser.add_argument("-r", "--read", action="store_true", help="set the read flag on all of unread documents")
+        parser.add_argument("-y", "--yes", action="store_true", help="confirm the above operation (for non-interactive scenarios)")
         parser.add_argument("-v", "--verbose", action="store_true", help="show more details while executing")
         parser.add_argument("--chrome-path", action="store", default="", help="set the Chrome browser directory path")
         parser.add_argument("--chromedriver", action="store", default="", help="set the chromedriver executable file path")
@@ -584,7 +585,7 @@ def main():
             print("https://ieeexplore.ieee.org/document/{}  \n".format(item["document_id"]))
 
     if args.read:
-        if input("Do you want to set the read flag on unread documents? [y/N] ") == "y":
+        if args.yes or input("Do you want to set the read flag on unread documents? [y/N] ") == "y":
             ieaf.set_read_flags()
         else:
             print("abort.")
