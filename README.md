@@ -63,7 +63,7 @@ ieaf脚本运行时会默认抓取每本期刊的early access页面的所有文�
 
 - `items.document_id`字段唯一地定义了一篇论文，取自论文页面的URL（例如 https://ieeexplore.ieee.org/abstract/document/4357009 ）；
 - `serials.isnumber`字段唯一地定义了一本期刊，取自期刊的early access页面的URL（例如 https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=5594698 ）；
-- `serials.user_sorted_order`字段用于存储用户自定义的期刊优先级（数字越小优先级越高），本脚本内预置的期刊的自定义规则如下：
+- `serials.user_defined_level`字段用于存储用户自定义的期刊优先级（数字越小优先级越高），本脚本内预置的期刊的自定义规则如下：
     - 中国计算机学会（CCF）推荐A/B/C类国际英文期刊分别对应1~3级；
     - SCI一区和二区（SCI分区使用中科院分区标准，下同）收录的国际期刊（不包括 IEEE Access）、IEEE Transactions期刊、IEEE Journal期刊对应4级；
     - SCI三区收录的国际期刊、IEEE Letters期刊对应5级；

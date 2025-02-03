@@ -102,30 +102,30 @@ CREATE TABLE serials (
                                     NOT NULL ON CONFLICT FAIL,
     title                  STRING   NOT NULL,
     abbreviation           STRING,
-    user_sorted_order      INTEGER,
+    user_defined_level      INTEGER,
     latest_update_datetime DATETIME
 );
 
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 'TVT', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4357935, 'Proceedings of the IEEE', 'Proc. IEEE', 1);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 'TITS', 2);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 'TMC', 1);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 'TON', 1);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 'TWC', 2);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 'COMST', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5497975, 'IEEE Transactions on Communications', 'TCOM', 2);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5534602, 'IEEE Communications Letters', 'LCOMM', 5);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 'JSAC', 1);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (5699970, 'IEEE Transactions on Network and Service Management', 'TNSM', 3);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (6065724, 'IEEE Wireless Communications Letters', 'LWC', 5);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 'MVT', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (6702522, 'IEEE Internet of Things Journal', 'IOT', 3);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 'TGCN', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7593423, 'IEEE Communications Magazine', 'MCOM', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7593426, 'IEEE Wireless Communications', 'MWC', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7593428, 'IEEE Network', 'MNET', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (7778228, 'IEEE Transactions on Aerospace and Electronic Systems', 'TAES', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_sorted_order) VALUES (9652444, 'China Communications', 'JCC', 5);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4356907, 'IEEE Transactions on Vehicular Technology', 'TVT', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4357935, 'Proceedings of the IEEE', 'Proc. IEEE', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 'TITS', 2);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 'TMC', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 'TON', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 'TWC', 2);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 'COMST', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5497975, 'IEEE Transactions on Communications', 'TCOM', 2);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5534602, 'IEEE Communications Letters', 'LCOMM', 5);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5594698, 'IEEE Journal on Selected Areas in Communications', 'JSAC', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5699970, 'IEEE Transactions on Network and Service Management', 'TNSM', 3);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6065724, 'IEEE Wireless Communications Letters', 'LWC', 5);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 'MVT', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6702522, 'IEEE Internet of Things Journal', 'IOT', 3);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 'TGCN', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7593423, 'IEEE Communications Magazine', 'MCOM', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7593426, 'IEEE Wireless Communications', 'MWC', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7593428, 'IEEE Network', 'MNET', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7778228, 'IEEE Transactions on Aerospace and Electronic Systems', 'TAES', 4);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (9652444, 'China Communications', 'JCC', 5);
 
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
@@ -171,7 +171,7 @@ PRAGMA foreign_keys = on;
 
         result = list()
 
-        sql = """select isnumber, latest_update_datetime from serials order by user_sorted_order asc, isnumber asc;"""
+        sql = """select isnumber, latest_update_datetime from serials order by user_defined_level asc, isnumber asc;"""
         
         try:
             conn = sqlite3.connect(self.database)
@@ -191,7 +191,7 @@ PRAGMA foreign_keys = on;
 
         result = dict()
 
-        sql = """select isnumber, title, abbreviation, user_sorted_order, latest_update_datetime from serials where isnumber = {};""".format(isnumber)
+        sql = """select isnumber, title, abbreviation, user_defined_level, latest_update_datetime from serials where isnumber = {};""".format(isnumber)
 
         try:
             conn = sqlite3.connect(self.database)
@@ -201,7 +201,7 @@ PRAGMA foreign_keys = on;
                 result["isnumber"]               = row[0]
                 result["title"]                  = row[1]
                 result["abbreviation"]           = row[2]
-                result["user_sorted_order"]      = row[3]
+                result["user_defined_level"]      = row[3]
                 result["latest_update_datetime"] = row[4]
             conn.close()
         except Exception as e:
@@ -247,10 +247,10 @@ PRAGMA foreign_keys = on;
             sys.exit(1)
 
 
-    def __insert_serial(self, isnumber: int, title: str, abbreviation: str = "", user_sorted_order: int = 0, latest_update_datetime: str = "")-> bool:
+    def __insert_serial(self, isnumber: int, title: str, abbreviation: str = "", user_defined_level: int = 0, latest_update_datetime: str = "")-> bool:
 
-        sql = """insert into serials (isnumber, title, abbreviation, user_sorted_order, latest_update_datetime) VALUES 
-            ({}, "{}", "{}", "{}", "{}");""".format(isnumber, title.replace('"', '\''), isnumber, abbreviation, user_sorted_order, latest_update_datetime)
+        sql = """insert into serials (isnumber, title, abbreviation, user_defined_level, latest_update_datetime) VALUES 
+            ({}, "{}", "{}", "{}", "{}");""".format(isnumber, title.replace('"', '\''), isnumber, abbreviation, user_defined_level, latest_update_datetime)
         
         try:
             conn = sqlite3.connect(self.database)
@@ -482,7 +482,7 @@ PRAGMA foreign_keys = on;
         statistics_dict = dict()
 
         sql = """select serials.title, count(document_id) from items inner join serials on items.isnumber = serials.isnumber 
-                    where items.latest_read_datetime = "" group by items.isnumber order by serials.user_sorted_order asc, items.isnumber asc;"""
+                    where items.latest_read_datetime = "" group by items.isnumber order by serials.user_defined_level asc, items.isnumber asc;"""
 
         try:
             conn = sqlite3.connect(self.database)
