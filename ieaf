@@ -426,7 +426,7 @@ PRAGMA foreign_keys = on;
         return result
 
 
-    def __fetch_early_access_items(self, isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
+    def _fetch_early_access_items(self, isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
 
         if self.spider == "selenium":
             return self.__fetch_early_access_items_by_selenium(isnumber, sortType, rowsPerPage, pageNumber)
@@ -434,7 +434,7 @@ PRAGMA foreign_keys = on;
         # for other spiders
         
         else:
-            print("Ieaf.__fetch_early_access_items() Error: unknown spider", file=sys.stderr)
+            print("Ieaf._fetch_early_access_items() Error: unknown spider", file=sys.stderr)
 
 
     def update_early_access(self, isnumber_list: list = list())-> None:
@@ -460,7 +460,7 @@ PRAGMA foreign_keys = on;
             last_num_of_unread_items = 0
             for page in range(1, 20):                
                 
-                for item in self.__fetch_early_access_items(isnumber, pageNumber=page):
+                for item in self._fetch_early_access_items(isnumber, pageNumber=page):
                     self.__insert_item(item["document_id"], item["title"], isnumber)
                 num_of_unread_items = len(self.__get_unread_items_in_serial(isnumber))
 
