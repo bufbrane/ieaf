@@ -33,8 +33,6 @@ class Ieaf:
         self.database = database
         self.verbose = verbose
 
-        self.spider = "selenium"
-
         # 1. make sure that database (with two tables) exists
         if not self.database:
             print("Ieaf.__init__() error: database name error.", file=sys.stderr)
@@ -428,13 +426,7 @@ PRAGMA foreign_keys = on;
 
     def _fetch_early_access_items(self, isnumber: int, sortType: str = "vol-only-newest", rowsPerPage: int = 100, pageNumber: int = 1)-> list:
 
-        if self.spider == "selenium":
-            return self.__fetch_early_access_items_by_selenium(isnumber, sortType, rowsPerPage, pageNumber)
-        
-        # for other spiders
-        
-        else:
-            print("Ieaf._fetch_early_access_items() Error: unknown spider", file=sys.stderr)
+        return self.__fetch_early_access_items_by_selenium(isnumber, sortType, rowsPerPage, pageNumber)
 
 
     def update_early_access(self, isnumber_list: list = list())-> None:
