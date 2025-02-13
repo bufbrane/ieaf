@@ -564,7 +564,10 @@ def main():
         statistics, items = ieaf.get_all_unread_items()
 
         if len(statistics) > 0:
-            print("Unread documents statistics: ")
+            counter = 0
+            for key in statistics:
+                counter += int(statistics[key])
+            print("Unread documents: {}".format(counter))
             for key in statistics: 
                 print("· {}: {}".format(key, statistics[key]))
             print("\n")
