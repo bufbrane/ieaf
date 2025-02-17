@@ -388,6 +388,7 @@ PRAGMA foreign_keys = on;
         try:
             service = ChromeService(executable_path=self.chromedriver)
             options = webdriver.ChromeOptions()
+            options.add_argument("--no-sandbox")
             browser = webdriver.Chrome(service=service, options=options)
 
             url = "https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber={}&sortType={}&rowsPerPage={}&pageNumber={}".format(isnumber, sortType, rowsPerPage, pageNumber)
