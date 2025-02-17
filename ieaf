@@ -538,7 +538,7 @@ PRAGMA foreign_keys = on;
 
 def parse_args()-> argparse.Namespace:
 
-        parser = argparse.ArgumentParser(prog="ieaf", description="ieaf is an acronym of IEEExplore early access follower.", epilog="For more details, please visit https://github.com/bufbrane/ieaf")
+        parser = argparse.ArgumentParser(prog="ieaf", description="ieaf is an acronym of IEEEXplore early access follower.", epilog="For more details, please visit https://github.com/bufbrane/ieaf")
         
         parser.add_argument("-n", "--no-update", action="store_true", dest="no_update", help="skip fetching early access items from IEEExplore")
         parser.add_argument("-l", "--list", action="store_true", help="list all of unread documents")
