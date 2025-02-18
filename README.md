@@ -22,7 +22,8 @@
 
 ```bash
 docker run -it bufbrane/ieaf bash
-xvfb-run ./ieaf -v
+xvfb-run ./ieaf -lv
+./ieaf -nr
 ```
 
 
@@ -44,7 +45,8 @@ xvfb-run ./ieaf -v
     Linux非GUI用户可以用Xvfb模拟GUI，需要安装软件包`xvfb`然后用`xvfb-run`命令运行本脚本，以Debian为例：
     ```bash
     sudo apt-get install -y xvfb
-    xvfb-run ./ieaf -v
+    xvfb-run ./ieaf -lv
+    ./ieaf -nr
     ```
     如果你不想被频繁弹出的浏览器窗口打断工作，也可以使用这一方式运行本脚本，Windows用户也可以在WSL2中使用这一方式运行本脚本。
 3. （可选）通过`--database`命令行参数传入**数据库文件**的路径；如未指定数据库文件，则默认使用`$PWD/ieaf.db`。
