@@ -22,6 +22,7 @@
 
 ```bash
 docker run -it bufbrane/ieaf bash
+xvfb-run ./ieaf -v
 ```
 
 
