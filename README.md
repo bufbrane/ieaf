@@ -20,24 +20,8 @@
 
 ### 自动挡：
 
-本项目提供了Docker构建脚本，如果不想手动配置运行环境，可以用Docker构建运行环境：
-
 ```bash
-git clone https://github.com/bufbrane/ieaf.git
-cd ieaf
-docker build -t ieaf .
-```
-
-然后进入容器：
-
-```
-docker run -it ieaf bash
-```
-
-执行：
-
-```
-xvfb-run ./ieaf -v
+docker run -it bufbrane/ieaf bash
 ```
 
 
