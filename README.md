@@ -11,6 +11,8 @@
 
 上述流程类似于RSS订阅，又或者说这也是本项目的主要动机：IEEEXplore的early access并没有提供官方的RSS订阅渠道（当然你可能会反驳，明明IEEEXplore官方提供了RSS源啊，莫不是在造轮子？作者的解释是，那个RSS源提供的内容来自**current issue**，并非early access），因此本脚本需要自行抓取early access。本脚本实现了类似于社交媒体的阅读机制（例如刷微博），用户可以follow自己感兴趣的期刊，每本期刊会不定时地发布最新的early access文章，利用本脚本将其汇集起来展示给用户浏览和筛选，浏览过的则不再展示。
 
+（作者偶然发现，本脚本居然能够比[Web of Science](https://webofscience.clarivate.cn/wos/)更早地索引这些期刊的最新文章，平均早一周至早两个月不等；当然，这并非本脚本的feature，而是Web of Science的滞后性所决定的）
+
 
 ## 运行方法：
 
