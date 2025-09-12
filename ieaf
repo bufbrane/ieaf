@@ -118,6 +118,7 @@ INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6065724, 'IEEE Wireless Communications Letters', 'LWC', 5);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6354260, 'IEEE Vehicular Technology Magazine', 'MVT', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6702522, 'IEEE Internet of Things Journal', 'IOT', 3);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (6930788, 'IEEE Transactions on Network Science and Engineering', 'TNSE', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7294639, 'IEEE Transactions on Cognitive Communications and Networking', 'TCCN', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7557027, 'IEEE Transactions on Green Communications and Networking', 'TGCN', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7593423, 'IEEE Communications Magazine', 'MCOM', 4);
