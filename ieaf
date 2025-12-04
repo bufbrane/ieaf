@@ -125,7 +125,6 @@ INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7593426, 'IEEE Wireless Communications', 'MWC', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7593428, 'IEEE Network', 'MNET', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (7778228, 'IEEE Transactions on Aerospace and Electronic Systems', 'TAES', 4);
-INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (9652444, 'China Communications', 'JCC', 5);
 
 COMMIT TRANSACTION;
 PRAGMA foreign_keys = on;
