@@ -108,7 +108,7 @@ INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4357935, 'Proceedings of the IEEE', 'Proc. IEEE', 1);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4358928, 'IEEE Transactions on Intelligent Transportation Systems', 'TITS', 2);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4358975, 'IEEE Transactions on Mobile Computing', 'TMC', 1);
-INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4359146, 'IEEE/ACM Transactions on Networking', 'TON', 1);
+INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (10805762,'IEEE Transactions on Networking', 'TON', 1);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (4656680, 'IEEE Transactions on Wireless Communications', 'TWC', 2);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5451756, 'IEEE Communications Surveys & Tutorials', 'COMST', 4);
 INSERT INTO serials (isnumber, title, abbreviation, user_defined_level) VALUES (5497975, 'IEEE Transactions on Communications', 'TCOM', 2);
